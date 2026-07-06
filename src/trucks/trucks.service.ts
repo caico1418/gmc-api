@@ -1,15 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateTruckDto } from './dto/create-truck.dto';
 import { UpdateTruckDto } from './dto/update-truck.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Truck } from './entities/truck.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class TrucksService {
-  create(createTruckDto: CreateTruckDto) {
-    return 'This action adds a new truck';
+
+
+  constructor(
+    @InjectRepository(Truck)
+    private readonly truckRepository: Repository<Truck>,
+  ){}
+
+  async create(createTruckDto: CreateTruckDto): Promise<Truck> {
+    try {
+      const truck = await this.truckRepository.create(createTruckDto);
+
+      await this.truckRepository.save(truck);
+
+      return truck;
+
+    } catch (error) {
+      this.handleExceptionDB(error);
+      throw error;
+    }
   }
 
-  findAll() {
-    return `This action returns all trucks`;
+  async findAll() {
+    return await this.truckRepository.find();
   }
 
   findOne(id: number) {
@@ -22,5 +42,25 @@ export class TrucksService {
 
   remove(id: number) {
     return `This action removes a #${id} truck`;
+  }
+
+
+  async deleteAllTrucks() {
+    const query = this.truckRepository.createQueryBuilder('truck');
+
+    try {
+      return await query
+      .delete()
+      .where({})
+      .execute()
+    } catch (error) {
+      
+    }
+  }
+
+  private handleExceptionDB(error: any) {
+    if(error.code === "23505") {
+      throw new BadRequestException('Ya existe el resgistro')
+    }
   }
 }
