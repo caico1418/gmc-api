@@ -17,18 +17,18 @@ export class TrucksController {
     return this.trucksService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.trucksService.findOne(+id);
+  @Get(':term')
+  findOne(@Param('term') term: string) {
+    return this.trucksService.findOne(term);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTruckDto: UpdateTruckDto) {
-    return this.trucksService.update(+id, updateTruckDto);
+    return this.trucksService.update(id, updateTruckDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.trucksService.remove(+id);
+    return this.trucksService.remove(id);
   }
 }

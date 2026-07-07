@@ -1,9 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTruckDto } from './dto/create-truck.dto';
 import { UpdateTruckDto } from './dto/update-truck.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Truck } from './entities/truck.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class TrucksService {
@@ -32,16 +32,44 @@ export class TrucksService {
     return await this.truckRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} truck`;
+  async findOne(term: string) {
+
+    term.trim();
+
+    const truck = await this.truckRepository.find({
+      where: {
+        model: ILike(`%${term}%`)
+      }
+    });
+
+    return truck;
   }
 
-  update(id: number, updateTruckDto: UpdateTruckDto) {
-    return `This action updates a #${id} truck`;
+  async update(id: string, updateTruckDto: UpdateTruckDto) {
+    try {
+      const truck = await this.truckRepository.preload({
+        id: id,
+        ...updateTruckDto
+      })
+
+      if(!truck) {
+        throw new NotFoundException('No existe');
+      }
+
+      await this.truckRepository.save(truck);
+
+      return truck;
+
+    } catch (error) {
+      console.log(error)
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} truck`;
+  async remove(id: string) {
+     await this.truckRepository.delete(id);
+    return {
+      message: 'deleted'
+    };
   }
 
 
